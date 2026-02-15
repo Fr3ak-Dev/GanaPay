@@ -1,4 +1,6 @@
+using GanaPay.Core.Interfaces.Repositories;
 using GanaPay.Infrastructure.Data;
+using GanaPay.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Configurar DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Registrar Repositorios
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
