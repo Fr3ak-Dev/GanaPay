@@ -16,6 +16,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Registrar Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
+// ==================== CONFIGURAR CORS ====================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",      // Next.js en desarrollo
+                "https://localhost:3000",     // Next.js HTTPS
+                "http://localhost:19006",     // Expo web
+                "exp://192.168.1.100:8081"    // Expo mobile
+            )
+            .AllowAnyMethod()                 // GET, POST, PUT, DELETE, etc.
+            .AllowAnyHeader()                 // Authorization, Content-Type, etc.
+            .AllowCredentials();              // Cookies, JWT en headers
+    });
+});
+// =========================================================
+
+// Configurar JSON para ignorar ciclos de referencia
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -53,6 +72,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
