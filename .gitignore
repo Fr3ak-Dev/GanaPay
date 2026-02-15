@@ -96,6 +96,8 @@ Thumbs.db
 .env.*.local
 appsettings.Development.json
 
+CLAUDE.md
+
 ## Logs
 *.log
 npm-debug.log*
