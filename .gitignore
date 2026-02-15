@@ -97,6 +97,7 @@ Thumbs.db
 appsettings.Development.json
 
 CLAUDE.md
+**/.claude/
 
 ## Logs
 *.log
