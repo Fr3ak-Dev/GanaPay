@@ -1,6 +1,7 @@
 using GanaPay.Core.Interfaces.Repositories;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
+using GanaPay.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -26,6 +27,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// ==================== SEED DATA ====================
+// Ejecutar seed al iniciar la aplicación
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        await DataSeeder.SeedAsync(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SEED] ❌ Error durante el seed: {ex.Message}");
+    }
+}
+// ===================================================
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
