@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanaPay.Core", "GanaPay.Core\GanaPay.Core.csproj", "{B90221A4-78C3-4244-9FC0-C5E8B6E6D862}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanaPay.Application", "GanaPay.Application\GanaPay.Application.csproj", "{08DE0031-2314-469B-9BCD-12FD982115FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanaPay.Infrastructure", "GanaPay.Infrastructure\GanaPay.Infrastructure.csproj", "{FE566256-AC5B-4F4F-B700-B68E05601D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GanaPay.API", "GanaPay.API\GanaPay.API.csproj", "{71BD7552-3390-4947-A7E2-41CA26932860}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B90221A4-78C3-4244-9FC0-C5E8B6E6D862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B90221A4-78C3-4244-9FC0-C5E8B6E6D862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B90221A4-78C3-4244-9FC0-C5E8B6E6D862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B90221A4-78C3-4244-9FC0-C5E8B6E6D862}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08DE0031-2314-469B-9BCD-12FD982115FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08DE0031-2314-469B-9BCD-12FD982115FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08DE0031-2314-469B-9BCD-12FD982115FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08DE0031-2314-469B-9BCD-12FD982115FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE566256-AC5B-4F4F-B700-B68E05601D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE566256-AC5B-4F4F-B700-B68E05601D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE566256-AC5B-4F4F-B700-B68E05601D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE566256-AC5B-4F4F-B700-B68E05601D62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71BD7552-3390-4947-A7E2-41CA26932860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71BD7552-3390-4947-A7E2-41CA26932860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71BD7552-3390-4947-A7E2-41CA26932860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71BD7552-3390-4947-A7E2-41CA26932860}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
