@@ -11,4 +11,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GanaPay.Core\GanaPay.Core.csproj" />
+    <ProjectReference Include="..\GanaPay.Application\GanaPay.Application.csproj" />
+    <ProjectReference Include="..\GanaPay.Infrastructure\GanaPay.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
