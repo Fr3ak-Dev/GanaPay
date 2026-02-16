@@ -1,3 +1,4 @@
+using GanaPay.Application.Mappings;
 using GanaPay.Core.Interfaces.Repositories;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
@@ -15,6 +16,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Registrar Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+// ==================== CONFIGURAR AUTOMAPPER ====================
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
 // ==================== CONFIGURAR CORS ====================
 builder.Services.AddCors(options =>
