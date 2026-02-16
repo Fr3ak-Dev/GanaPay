@@ -1,5 +1,5 @@
+using AutoMapper;
 using GanaPay.Application.DTOs.Auth;
-using GanaPay.Application.DTOs.Cuentas;
 using GanaPay.Core.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,13 +10,16 @@ namespace GanaPay.API.Controllers;
 public class UsuariosController : ControllerBase
 {
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IMapper _mapper;
     private readonly ILogger<UsuariosController> _logger;
 
     public UsuariosController(
         IUsuarioRepository usuarioRepository,
+        IMapper mapper,
         ILogger<UsuariosController> logger)
     {
         _usuarioRepository = usuarioRepository;
+        _mapper = mapper;
         _logger = logger;
     }
 
@@ -27,18 +30,8 @@ public class UsuariosController : ControllerBase
         
         var usuarios = await _usuarioRepository.GetAllAsync();
         
-        // Mapeo manual: Entidad → DTO
-        var usuariosDTO = usuarios.Select(u => new UsuarioDTO
-        {
-            Id = u.Id,
-            NombreCompleto = u.NombreCompleto,
-            Email = u.Email,
-            NumeroDocumento = u.NumeroDocumento,
-            Telefono = u.Telefono,
-            Rol = u.Rol,
-            Activo = u.Activo,
-            FechaRegistro = u.FechaRegistro
-        }).ToList();
+        // AutoMapper: Mapea List<Usuario> → List<UsuarioDTO>
+        var usuariosDTO = _mapper.Map<List<UsuarioDTO>>(usuarios);
         
         _logger.LogInformation("Retornando {Count} usuarios", usuariosDTO.Count);
         return Ok(usuariosDTO);
@@ -57,17 +50,7 @@ public class UsuariosController : ControllerBase
             return NotFound(new { message = $"Usuario con ID {id} no encontrado" });
         }
         
-        var usuarioDTO = new UsuarioDTO
-        {
-            Id = usuario.Id,
-            NombreCompleto = usuario.NombreCompleto,
-            Email = usuario.Email,
-            NumeroDocumento = usuario.NumeroDocumento,
-            Telefono = usuario.Telefono,
-            Rol = usuario.Rol,
-            Activo = usuario.Activo,
-            FechaRegistro = usuario.FechaRegistro
-        };
+        var usuarioDTO = _mapper.Map<UsuarioDTO>(usuario);
         
         return Ok(usuarioDTO);
     }
@@ -85,17 +68,7 @@ public class UsuariosController : ControllerBase
             return NotFound(new { message = $"Usuario con email {email} no encontrado" });
         }
         
-        var usuarioDTO = new UsuarioDTO
-        {
-            Id = usuario.Id,
-            NombreCompleto = usuario.NombreCompleto,
-            Email = usuario.Email,
-            NumeroDocumento = usuario.NumeroDocumento,
-            Telefono = usuario.Telefono,
-            Rol = usuario.Rol,
-            Activo = usuario.Activo,
-            FechaRegistro = usuario.FechaRegistro
-        };
+        var usuarioDTO = _mapper.Map<UsuarioDTO>(usuario);
         
         return Ok(usuarioDTO);
     }
@@ -112,29 +85,8 @@ public class UsuariosController : ControllerBase
             _logger.LogWarning("Usuario con ID {UserId} no encontrado", id);
             return NotFound(new { message = $"Usuario con ID {id} no encontrado" });
         }
-        
-        var usuarioConCuentasDTO = new UsuarioConCuentasDTO
-        {
-            Id = usuario.Id,
-            NombreCompleto = usuario.NombreCompleto,
-            Email = usuario.Email,
-            NumeroDocumento = usuario.NumeroDocumento,
-            Telefono = usuario.Telefono,
-            Rol = usuario.Rol,
-            Activo = usuario.Activo,
-            FechaRegistro = usuario.FechaRegistro,
-            Cuentas = usuario.Cuentas.Select(c => new CuentaDTO
-            {
-                Id = c.Id,
-                NumeroCuenta = c.NumeroCuenta,
-                TipoMoneda = c.TipoMoneda,
-                Saldo = c.Saldo,
-                Activa = c.Activa,
-                FechaCreacion = c.FechaCreacion,
-                UsuarioId = c.UsuarioId,
-                NombreUsuario = usuario.NombreCompleto
-            }).ToList()
-        };
+
+        var usuarioConCuentasDTO = _mapper.Map<UsuarioConCuentasDTO>(usuario);
         
         _logger.LogInformation("Usuario {UserName} tiene {CuentasCount} cuentas", 
             usuario.NombreCompleto, usuarioConCuentasDTO.Cuentas.Count);
