@@ -94,7 +94,9 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
-appsettings.Development.json
+
+CLAUDE.md
+**/.claude/
 
 ## Logs
 *.log
