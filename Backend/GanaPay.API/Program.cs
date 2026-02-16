@@ -1,4 +1,7 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using GanaPay.Application.Mappings;
+using GanaPay.Application.Validators;
 using GanaPay.Core.Interfaces.Repositories;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
@@ -19,6 +22,10 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+// ==================== CONFIGURAR FLUENTVALIDATION ====================
+// builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
 // ==================== CONFIGURAR CORS ====================
 builder.Services.AddCors(options =>
