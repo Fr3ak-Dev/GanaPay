@@ -1,12 +1,14 @@
 using AutoMapper;
 using GanaPay.Application.DTOs.Auth;
 using GanaPay.Core.Interfaces.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GanaPay.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsuariosController : ControllerBase
 {
     private readonly IUsuarioRepository _usuarioRepository;
@@ -95,6 +97,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet("count")]
+    [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> GetCount()
     {
         var count = await _usuarioRepository.CountAsync();
