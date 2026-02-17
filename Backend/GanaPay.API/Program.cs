@@ -1,31 +1,47 @@
+using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using GanaPay.Application.Interfaces;
 using GanaPay.Application.Mappings;
+using GanaPay.Application.Services;
+using GanaPay.Application.Settings;
 using GanaPay.Application.Validators;
 using GanaPay.Core.Interfaces.Repositories;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
 using GanaPay.Infrastructure.Seed;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ==================== CONFIGURAR SETTINGS ====================
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtSettings"));
+// =============================================================
 
-// Configurar DbContext
+// ==================== CONFIGURAR DbContext ====================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// ==============================================================
 
-// Registrar Repositorios
+// ==================== REGISTRAR REPOSITORIOS ====================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+// ================================================================
+
+// ==================== REGISTRAR SERVICIOS ====================
+builder.Services.AddScoped<IAuthService, AuthService>();
+// =============================================================
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+// ===============================================================
 
 // ==================== CONFIGURAR FLUENTVALIDATION ====================
-// builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+// =====================================================================
 
 // ==================== CONFIGURAR CORS ====================
 builder.Services.AddCors(options =>
@@ -33,25 +49,57 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:3000",      // Next.js en desarrollo
-                "https://localhost:3000",     // Next.js HTTPS
-                "http://localhost:19006",     // Expo web
-                "exp://192.168.1.100:8081"    // Expo mobile
+                "http://localhost:3000",
+                "https://localhost:3000",
+                "http://localhost:5057",
+                "https://localhost:7057",
+                "http://localhost:19006"
             )
-            .AllowAnyMethod()                 // GET, POST, PUT, DELETE, etc.
-            .AllowAnyHeader()                 // Authorization, Content-Type, etc.
-            .AllowCredentials();              // Cookies, JWT en headers
+            .AllowAnyMethod()       // GET, POST, PUT, DELETE, etc.
+            .AllowAnyHeader()       // Authorization, Content-Type, etc.
+            .AllowCredentials();    // Cookies, JWT en headers
     });
 });
 // =========================================================
 
-// Configurar JSON para ignorar ciclos de referencia
+// ==================== CONFIGURAR AUTENTICACIÓN JWT ====================
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false; // En desarrollo, permite HTTP
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings!.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+        ClockSkew = TimeSpan.Zero // Token expira exactamente cuando debe
+    };
+});
+
+builder.Services.AddAuthorization();
+// ======================================================================
+
+// ==================== CONFIGURAR CONTROLLERS ====================
+// Configuración para evitar/ignorar ciclos de referencia en JSON y omitir propiedades nulas
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+// ================================================================
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -59,7 +107,6 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // ==================== SEED DATA ====================
-// Ejecutar seed al iniciar la aplicación
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -75,7 +122,7 @@ using (var scope = app.Services.CreateScope())
 }
 // ===================================================
 
-// Configure the HTTP request pipeline.
+// ==================== CONFIGURAR PIPELINE ====================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -86,8 +133,10 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthorization();
+app.UseAuthentication();  // ← PRIMERO: Verifica quién eres
+app.UseAuthorization();   // ← SEGUNDO: Verifica qué puedes hacer
 
 app.MapControllers();
 
 app.Run();
+// ============================================================
