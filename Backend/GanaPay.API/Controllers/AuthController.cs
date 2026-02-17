@@ -1,6 +1,7 @@
 using FluentValidation;
 using GanaPay.Application.DTOs.Auth;
 using GanaPay.Application.Interfaces;
+using GanaPay.API.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GanaPay.API.Controllers;
@@ -36,15 +37,7 @@ public class AuthController : ControllerBase
         if (!validationResult.IsValid)
         {
             _logger.LogWarning("Registro fallido por validación: {Email}", dto.Email);
-            return BadRequest(new
-            {
-                errors = validationResult.Errors
-                    .GroupBy(e => e.PropertyName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(e => e.ErrorMessage).ToArray()
-                    )
-            });
+            return BadRequest(validationResult.ToErrorResponse());
         }
 
         var result = await _authService.RegisterAsync(dto);
@@ -69,15 +62,7 @@ public class AuthController : ControllerBase
         if (!validationResult.IsValid)
         {
             _logger.LogWarning("Login fallido por validación: {Email}", dto.Email);
-            return BadRequest(new
-            {
-                errors = validationResult.Errors
-                    .GroupBy(e => e.PropertyName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(e => e.ErrorMessage).ToArray()
-                    )
-            });
+             return BadRequest(validationResult.ToErrorResponse());
         }
 
         var result = await _authService.LoginAsync(dto);
