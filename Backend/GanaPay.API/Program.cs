@@ -7,6 +7,7 @@ using GanaPay.Application.Services;
 using GanaPay.Application.Settings;
 using GanaPay.Application.Validators;
 using GanaPay.Core.Interfaces.Repositories;
+using GanaPay.Core.Interfaces; 
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
 using GanaPay.Infrastructure.Seed;
@@ -29,6 +30,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // ==================== REGISTRAR REPOSITORIOS ====================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ICuentaRepository, CuentaRepository>();
+builder.Services.AddScoped<ITransaccionRepository, TransaccionRepository>();
+// ================================================================
+
+// ==================== REGISTRAR UNIT OF WORK ====================
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ================================================================
 
 // ==================== REGISTRAR SERVICIOS ====================
