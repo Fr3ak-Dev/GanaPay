@@ -7,10 +7,11 @@ using GanaPay.Application.Services;
 using GanaPay.Application.Settings;
 using GanaPay.Application.Validators;
 using GanaPay.Core.Interfaces.Repositories;
-using GanaPay.Core.Interfaces; 
+using GanaPay.Core.Interfaces;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
 using GanaPay.Infrastructure.Seed;
+using GanaPay.Infrastructure.Audit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +22,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ==================== CONFIGURAR SETTINGS ====================
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<MongoDbSettings>(
+builder.Configuration.GetSection("MongoDbSettings"));
 // =============================================================
 
 // ==================== CONFIGURAR DbContext ====================
@@ -41,6 +44,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ==================== REGISTRAR SERVICIOS ====================
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITransaccionService, TransaccionService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 // =============================================================
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
