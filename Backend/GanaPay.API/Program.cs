@@ -40,6 +40,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // ==================== REGISTRAR SERVICIOS ====================
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITransaccionService, TransaccionService>();
 // =============================================================
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
