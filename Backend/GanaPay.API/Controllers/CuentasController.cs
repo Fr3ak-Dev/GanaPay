@@ -75,4 +75,54 @@ public class CuentasController : ControllerBase
             activa = cuenta.Activa
         });
     }
+
+    [HttpGet("resumen/{id}")]
+    public async Task<IActionResult> GetResumen(int id)
+    {
+        var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        _logger.LogInformation("Resumen de cuenta solicitado - Cuenta: {CuentaId}, Usuario: {UserId}",
+            id, usuarioId);
+
+        var cuenta = await _unitOfWork.Cuentas.GetByIdAsync(id);
+
+        if (cuenta == null)
+            return NotFound(new { message = "Cuenta no encontrada" });
+
+        if (cuenta.UsuarioId != usuarioId)
+            return Forbid();
+
+        // Llamar al SP
+        var resumen = await _unitOfWork.GetResumenCuentaAsync(id);
+
+        if (resumen == null)
+            return NotFound(new { message = "No se pudo obtener el resumen" });
+
+        return Ok(resumen);
+    }
+
+    [HttpGet("historial-sp")]
+    public async Task<IActionResult> GetHistorialSP(
+        [FromQuery] DateTime? desde,
+        [FromQuery] DateTime? hasta)
+    {
+        var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        // Si no se especifican fechas, usar el último mes
+        var fechaDesde = desde ?? DateTime.UtcNow.AddMonths(-1).Date;   // Date para quitar hora
+        var fechaHasta = hasta ?? DateTime.UtcNow.Date;
+
+        _logger.LogInformation(
+            "Historial SP solicitado - Usuario: {UserId}, Desde: {Desde:yyyy-MM-dd}, Hasta: {Hasta:yyyy-MM-dd}",
+            usuarioId, fechaDesde, fechaHasta);
+
+        var historial = await _unitOfWork.GetHistorialTransaccionesAsync(
+            usuarioId, fechaDesde, fechaHasta);
+
+        _logger.LogInformation(
+            "Historial SP retornó {Count} registros",
+            ((IEnumerable<object>)historial).Count());
+
+        return Ok(historial);
+    }
 }
