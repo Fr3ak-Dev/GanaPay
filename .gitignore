@@ -31,8 +31,6 @@ bld/
 **/packages/*
 !**/packages/build/
 
-## Entity Framework
-**/Migrations/
 
 # ========================================
 # Next.js Frontend
