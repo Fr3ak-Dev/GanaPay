@@ -7,19 +7,24 @@ using GanaPay.Application.Services;
 using GanaPay.Application.Settings;
 using GanaPay.Application.Validators;
 using GanaPay.Core.Interfaces.Repositories;
+using GanaPay.Core.Interfaces;
 using GanaPay.Infrastructure.Data;
 using GanaPay.Infrastructure.Repositories;
 using GanaPay.Infrastructure.Seed;
+using GanaPay.Infrastructure.Audit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
+using GanaPay.API.Converters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ==================== CONFIGURAR SETTINGS ====================
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<MongoDbSettings>(
+builder.Configuration.GetSection("MongoDbSettings"));
 // =============================================================
 
 // ==================== CONFIGURAR DbContext ====================
@@ -29,10 +34,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // ==================== REGISTRAR REPOSITORIOS ====================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ICuentaRepository, CuentaRepository>();
+builder.Services.AddScoped<ITransaccionRepository, TransaccionRepository>();
+// ================================================================
+
+// ==================== REGISTRAR UNIT OF WORK ====================
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ================================================================
 
 // ==================== REGISTRAR SERVICIOS ====================
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITransaccionService, TransaccionService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 // =============================================================
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
@@ -98,6 +111,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        // Serialización de MongoDB
+        options.JsonSerializerOptions.Converters.Add(new BsonDocumentJsonConverter());
     });
 // ================================================================
 
@@ -167,8 +182,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();  // ← PRIMERO: Verifica quién eres
-app.UseAuthorization();   // ← SEGUNDO: Verifica qué puedes hacer
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

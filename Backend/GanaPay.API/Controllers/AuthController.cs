@@ -2,6 +2,7 @@ using FluentValidation;
 using GanaPay.Application.DTOs.Auth;
 using GanaPay.Application.Interfaces;
 using GanaPay.API.Extensions;
+using GanaPay.Infrastructure.Audit;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GanaPay.API.Controllers;
@@ -14,17 +15,20 @@ public class AuthController : ControllerBase
     private readonly IValidator<RegisterRequestDTO> _registerValidator;
     private readonly IValidator<LoginRequestDTO> _loginValidator;
     private readonly ILogger<AuthController> _logger;
+    private readonly IAuditService _auditService;
 
     public AuthController(
         IAuthService authService,
         IValidator<RegisterRequestDTO> registerValidator,
         IValidator<LoginRequestDTO> loginValidator,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IAuditService auditService)
     {
         _authService = authService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
         _logger = logger;
+        _auditService = auditService;
     }
 
     [HttpPost("register")]
@@ -55,6 +59,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDTO dto)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
         _logger.LogInformation("Intento de login: {Email}", dto.Email);
 
         // Validar DTO con FluentValidation
@@ -62,7 +68,10 @@ public class AuthController : ControllerBase
         if (!validationResult.IsValid)
         {
             _logger.LogWarning("Login fallido por validación: {Email}", dto.Email);
-             return BadRequest(validationResult.ToErrorResponse());
+
+            await _auditService.LogLoginAsync(0, dto.Email, ip, false);
+
+            return BadRequest(validationResult.ToErrorResponse());
         }
 
         var result = await _authService.LoginAsync(dto);
@@ -70,10 +79,20 @@ public class AuthController : ControllerBase
         if (!result.Success)
         {
             _logger.LogWarning("Login fallido: {Email} - {Message}", dto.Email, result.Message);
+
+            await _auditService.LogLoginAsync(0, dto.Email, ip, false);
+
             return Unauthorized(new { message = result.Message });
         }
 
         _logger.LogInformation("Login exitoso: {Email}", dto.Email);
+
+        await _auditService.LogLoginAsync(
+            result.Data!.Usuario.Id,
+            result.Data.Usuario.Email,
+            ip,
+            true);
+
         return Ok(result);
     }
 }
