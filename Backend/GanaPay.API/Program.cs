@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
+using GanaPay.API.Converters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +111,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        // Serialización de MongoDB
+        options.JsonSerializerOptions.Converters.Add(new BsonDocumentJsonConverter());
     });
 // ================================================================
 
@@ -179,8 +182,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();  // ← PRIMERO: Verifica quién eres
-app.UseAuthorization();   // ← SEGUNDO: Verifica qué puedes hacer
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
