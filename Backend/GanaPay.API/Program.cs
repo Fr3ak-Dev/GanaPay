@@ -46,6 +46,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITransaccionService, TransaccionService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 // =============================================================
 
 // ==================== CONFIGURAR AUTOMAPPER ====================
@@ -155,21 +156,6 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// ==================== SEED DATA ====================
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        await DataSeeder.SeedAsync(context);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[SEED] ❌ Error durante el seed: {ex.Message}");
-    }
-}
-// ===================================================
 
 // ==================== CONFIGURAR PIPELINE ====================
 if (app.Environment.IsDevelopment())
@@ -187,5 +173,46 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// ==================== APLICAR MIGRACIONES AUTOMÁTICAMENTE ====================
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        // Aplicar migraciones pendientes
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            Console.WriteLine("Aplicando migraciones pendientes...");
+            context.Database.Migrate();
+            Console.WriteLine("Migraciones aplicadas exitosamente.");
+        }
+        else
+        {
+            Console.WriteLine("No hay migraciones pendientes.");
+        }
+
+        // Ejecutar seed si la BD está vacía
+        var seeder = services.GetRequiredService<IDataSeeder>();
+        Console.WriteLine("Verificando datos iniciales...");
+        await seeder.SeedAsync();
+        Console.WriteLine("Datos iniciales verificados.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al aplicar migraciones o seed.");
+
+        // En desarrollo, re-lanzar el error
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
+}
+
+// =========================================================================
 app.Run();
 // ============================================================

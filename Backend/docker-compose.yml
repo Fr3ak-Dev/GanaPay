@@ -1,0 +1,58 @@
+services:
+  # ==================== API ====================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ganapay-api
+    ports:
+      - "5057:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=GanaPayDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=GanaPayAudit
+      - JwtSettings__SecretKey=TU_CLAVE_SUPER_SECRETA_DE_AL_MENOS_32_CARACTERES_PARA_MAYOR_SEGURIDAD
+    depends_on:
+      - sqlserver
+      - mongodb
+    networks:
+      - ganapay-network
+
+  # ==================== SQL SERVER ====================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ganapay-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - ganapay-network
+
+  # ==================== MONGODB ====================
+  mongodb:
+    image: mongo:7.0
+    container_name: ganapay-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - ganapay-network
+
+# ==================== VOLUMES ====================
+volumes:
+  sqlserver-data:
+    driver: local
+  mongodb-data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  ganapay-network:
+    driver: bridge

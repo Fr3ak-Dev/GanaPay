@@ -5,15 +5,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GanaPay.Infrastructure.Seed;
 
-public static class DataSeeder
+public class DataSeeder : IDataSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext context)
+    private readonly ApplicationDbContext _context;
+
+    public DataSeeder(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task SeedAsync()
     {
         // Asegurar que la base de datos existe
-        await context.Database.MigrateAsync();
+        await _context.Database.MigrateAsync();
 
         // Si ya hay usuarios, no hacer nada
-        if (await context.Usuarios.AnyAsync())
+        if (await _context.Usuarios.AnyAsync())
         {
             Console.WriteLine("[SEED] ⚠️  La base de datos ya tiene datos. Omitiendo seed.");
             return;
@@ -59,8 +66,8 @@ public static class DataSeeder
             }
         };
 
-        await context.Usuarios.AddRangeAsync(usuarios);
-        await context.SaveChangesAsync();
+        await _context.Usuarios.AddRangeAsync(usuarios);
+        await _context.SaveChangesAsync();
         Console.WriteLine($"[SEED] ✅ {usuarios.Count} usuarios creados");
 
         // ==================== CREAR CUENTAS ====================
@@ -118,8 +125,8 @@ public static class DataSeeder
             }
         };
 
-        await context.Cuentas.AddRangeAsync(cuentas);
-        await context.SaveChangesAsync();
+        await _context.Cuentas.AddRangeAsync(cuentas);
+        await _context.SaveChangesAsync();
         Console.WriteLine($"[SEED] ✅ {cuentas.Count} cuentas creadas");
 
         // ==================== CREAR TRANSACCIONES DE EJEMPLO ====================
@@ -164,8 +171,8 @@ public static class DataSeeder
             }
         };
 
-        await context.Transacciones.AddRangeAsync(transacciones);
-        await context.SaveChangesAsync();
+        await _context.Transacciones.AddRangeAsync(transacciones);
+        await _context.SaveChangesAsync();
         Console.WriteLine($"[SEED] ✅ {transacciones.Count} transacciones creadas");
 
         Console.WriteLine("[SEED] 🎉 Seed completado exitosamente!");
