@@ -8,12 +8,15 @@ services:
     ports:
       - "5057:80"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS}
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=GanaPayDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
-      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
-      - MongoDbSettings__DatabaseName=GanaPayAudit
-      - JwtSettings__SecretKey=TU_CLAVE_SUPER_SECRETA_DE_AL_MENOS_32_CARACTERES_PARA_MAYOR_SEGURIDAD
+      - MongoDbSettings__ConnectionString=${MONGO_CONNECTION_STRING}
+      - MongoDbSettings__DatabaseName=${MONGO_DATABASE_NAME}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
+      - JwtSettings__ExpirationInMinutes=${JWT_EXPIRATION_MINUTES}
     depends_on:
       - sqlserver
       - mongodb
