@@ -4,6 +4,7 @@ using GanaPay.Application.Interfaces;
 using GanaPay.Core.Entities;
 using GanaPay.Core.Enums;
 using GanaPay.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace GanaPay.Application.Services;
 
@@ -11,55 +12,56 @@ public class TransaccionService : ITransaccionService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<TransaccionService> _logger;
 
-    public TransaccionService(IUnitOfWork unitOfWork, IMapper mapper)
+    public TransaccionService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<TransaccionService> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<TransferenciaResponseDTO> TransferirAsync(
         TransferenciaRequestDTO dto,
         int usuarioId)
     {
-        // ===== VALIDACIONES DE NEGOCIO =====
+        _logger.LogInformation("Iniciando transferencia para usuario {UserId}", usuarioId);
 
-        var cuentaOrigen = await _unitOfWork.Cuentas.GetByIdAsync(dto.CuentaOrigenId);
-
-        if (cuentaOrigen == null)
-            return Error("La cuenta de origen no existe");
-
-        if (cuentaOrigen.UsuarioId != usuarioId)
-            return Error("No tienes permiso para usar esta cuenta");
-
-        if (!cuentaOrigen.Activa)
-            return Error("La cuenta de origen está inactiva");
-
-        var cuentaDestino = await _unitOfWork.Cuentas.GetByIdAsync(dto.CuentaDestinoId);
-
-        if (cuentaDestino == null)
-            return Error("La cuenta de destino no existe");
-
-        if (!cuentaDestino.Activa)
-            return Error("La cuenta de destino está inactiva");
-
-        if (cuentaOrigen.Id == cuentaDestino.Id)
-            return Error("No puedes transferir a la misma cuenta");
-
-        if (cuentaOrigen.TipoMoneda != cuentaDestino.TipoMoneda)
-            return Error("Las cuentas deben ser de la misma moneda");
-
-        if (dto.Monto <= 0)
-            return Error("El monto debe ser mayor a cero");
-
-        if (cuentaOrigen.Saldo < dto.Monto)
-            return Error($"Saldo insuficiente. Saldo disponible: {cuentaOrigen.Saldo:F2}");
-
-        // ===== EJECUTAR TRANSFERENCIA CON UNIT OF WORK =====
-        await _unitOfWork.BeginTransactionAsync();
-
-        try
+        return await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
+            // ===== VALIDACIONES DE NEGOCIO =====
+
+            var cuentaOrigen = await _unitOfWork.Cuentas.GetByIdAsync(dto.CuentaOrigenId);
+
+            if (cuentaOrigen == null)
+                return Error("La cuenta de origen no existe");
+
+            if (cuentaOrigen.UsuarioId != usuarioId)
+                return Error("No tienes permiso para usar esta cuenta");
+
+            if (!cuentaOrigen.Activa)
+                return Error("La cuenta de origen está inactiva");
+
+            var cuentaDestino = await _unitOfWork.Cuentas.GetByIdAsync(dto.CuentaDestinoId);
+
+            if (cuentaDestino == null)
+                return Error("La cuenta de destino no existe");
+
+            if (!cuentaDestino.Activa)
+                return Error("La cuenta de destino está inactiva");
+
+            if (cuentaOrigen.Id == cuentaDestino.Id)
+                return Error("No puedes transferir a la misma cuenta");
+
+            if (cuentaOrigen.TipoMoneda != cuentaDestino.TipoMoneda)
+                return Error("Las cuentas deben ser de la misma moneda");
+
+            if (dto.Monto <= 0)
+                return Error("El monto debe ser mayor a cero");
+
+            if (cuentaOrigen.Saldo < dto.Monto)
+                return Error($"Saldo insuficiente. Saldo disponible: {cuentaOrigen.Saldo:F2}");
+
             // Débitar cuenta origen
             cuentaOrigen.Saldo -= dto.Monto;
             await _unitOfWork.Cuentas.UpdateAsync(cuentaOrigen);
@@ -97,13 +99,7 @@ public class TransaccionService : ITransaccionService
                 NuevoSaldoOrigen = cuentaOrigen.Saldo,
                 NuevoSaldoDestino = cuentaDestino.Saldo
             };
-        }
-        catch (Exception ex)
-        {
-            await _unitOfWork.RollbackAsync();
-
-            return Error($"Error al procesar la transferencia: {ex.Message}");
-        }
+        });
     }
 
     public async Task<IEnumerable<TransaccionDTO>> GetHistorialAsync(
