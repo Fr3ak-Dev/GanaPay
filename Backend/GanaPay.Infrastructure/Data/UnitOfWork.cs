@@ -233,7 +233,10 @@ public class UnitOfWork : IUnitOfWork
             }
             catch
             {
-                await RollbackAsync();
+                if (_transaction != null)
+                {
+                    await RollbackAsync();
+                }
                 throw;
             }
         });
