@@ -12,8 +12,10 @@ public interface IUnitOfWork : IDisposable
     Task<int> CommitAsync();
     Task RollbackAsync();
 
+    Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> operation);
+
     // ==================== STORED PROCEDURES ====================
-    
+
     Task<object?> GetResumenCuentaAsync(int cuentaId);  // retorna object genérico, Application/Service hace el cast al DTO correcto
     Task<object?> GetEstadisticasAdminAsync();
     Task<IEnumerable<object>> GetHistorialTransaccionesAsync(

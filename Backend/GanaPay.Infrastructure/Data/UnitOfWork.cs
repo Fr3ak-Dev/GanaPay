@@ -57,8 +57,19 @@ public class UnitOfWork : IUnitOfWork
         }
         catch
         {
-            await RollbackAsync();
+            if (_transaction != null)
+            {
+                await RollbackAsync();
+            }
             throw;
+        }
+        finally
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
         }
     }
 
@@ -214,5 +225,31 @@ public class UnitOfWork : IUnitOfWork
     {
         _transaction?.Dispose();
         _context.Dispose();
+    }
+
+    // =================== EXECUTION STRATEGY ========================
+    public async Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> operation)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await BeginTransactionAsync();
+
+            try
+            {
+                var result = await operation();
+                await CommitAsync();
+                return result;
+            }
+            catch
+            {
+                if (_transaction != null)
+                {
+                    await RollbackAsync();
+                }
+                throw;
+            }
+        });
     }
 }
